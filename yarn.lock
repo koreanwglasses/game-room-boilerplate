@@ -2597,6 +2597,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fish@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "fish@workspace:."
+  dependencies:
+    "@emotion/react": ^11.6.0
+    "@emotion/styled": ^11.6.0
+    "@mui/material": ^5.2.0
+    "@mui/system": ^5.2.0
+    "@types/deep-equal": ^1.0.1
+    "@types/node": 16.11.10
+    "@types/react": 17.0.37
+    deep-equal: ^2.0.5
+    eslint: 7
+    eslint-config-next: 12.0.4
+    next: latest
+    next-session: ^4.0.4
+    prettier: ^2.4.1
+    react: 17.0.2
+    react-dom: 17.0.2
+    react-use: ^17.3.1
+    socket.io: ^4.4.0
+    socket.io-client: ^4.4.0
+    swr: ^1.0.1
+    typescript: 4.5.2
+  languageName: unknown
+  linkType: soft
+
 "flat-cache@npm:^3.0.4":
   version: 3.0.4
   resolution: "flat-cache@npm:3.0.4"
@@ -3812,33 +3839,6 @@ __metadata:
   checksum: d602a2d75aa8b059a304f015eb6c492357f64088a37f1954a98b50f566726e5ab8f0bf3610cf8a74bd37ced5ed1c6c5fe21b964381044f592cbe8ac105029dae
   languageName: node
   linkType: hard
-
-"next-with-sockets@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "next-with-sockets@workspace:."
-  dependencies:
-    "@emotion/react": ^11.6.0
-    "@emotion/styled": ^11.6.0
-    "@mui/material": ^5.2.0
-    "@mui/system": ^5.2.0
-    "@types/deep-equal": ^1.0.1
-    "@types/node": 16.11.10
-    "@types/react": 17.0.37
-    deep-equal: ^2.0.5
-    eslint: 7
-    eslint-config-next: 12.0.4
-    next: latest
-    next-session: ^4.0.4
-    prettier: ^2.4.1
-    react: 17.0.2
-    react-dom: 17.0.2
-    react-use: ^17.3.1
-    socket.io: ^4.4.0
-    socket.io-client: ^4.4.0
-    swr: ^1.0.1
-    typescript: 4.5.2
-  languageName: unknown
-  linkType: soft
 
 "next@npm:latest":
   version: 12.0.4
