@@ -58,7 +58,7 @@ const RoomIndex = () => {
             }}
           >
             <Typography>Success!</Typography>
-            <code>{JSON.stringify(data, null, 2)}</code>
+            <pre>{JSON.stringify(data, null, 2)}</pre>
           </Box>
         </Fade>
         <Collapse in={!!error}>
