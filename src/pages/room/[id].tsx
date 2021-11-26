@@ -28,11 +28,16 @@ const RoomIndex = () => {
           alignItems: "center",
           justifyContent: "center",
           p: 1,
+          minHeight: 200,
+          minWidth: 300,
         }}
       >
-        <Fade in={!data && !error} unmountOnExit>
+        <Fade in={!data && !error} unmountOnExit appear={false}>
           <Box
             sx={{
+              position: "absolute",
+              width: 1,
+              height: 1,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -43,7 +48,7 @@ const RoomIndex = () => {
             <CircularProgress />
           </Box>
         </Fade>
-        <Fade in={!!data} unmountOnExit>
+        <Fade in={!!data}>
           <Box
             sx={{
               display: "flex",
