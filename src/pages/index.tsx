@@ -3,34 +3,20 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Collapse,
+  Paper,
+  TextField,
   Typography,
 } from "@mui/material";
-import { useList } from "react-use";
-import { useSocket, useSocketIndex } from "../lib/use-socket";
-import { useSubscription } from "../lib/use-subscription";
 import { post } from "../lib/fetchers";
+import SwipeableViews from "react-swipeable-views";
 
-const Ping = () => {
-  const [messages, { push }] = useList<string>();
-  const [waiting, setWaiting] = useState<boolean>();
-  const [error, setError] = useState<Error & { code: number }>();
+const Index = () => {
+  const [displayName, setDisplayName] = useState<string>("");
+  const [waiting, setWaiting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
-  const socketIndex = useSocketIndex();
-
-  const { data } = useSubscription("/api/socket/session/link");
-  const { socketsLinked } = data ?? {};
-
-  useSocket(
-    (socket) => {
-      socket.on("message", (message: string) => {
-        push(message);
-        setWaiting(false);
-      });
-    },
-    [push]
-  );
+  const [index, setIndex] = useState(0);
 
   return (
     <Box
@@ -44,42 +30,61 @@ const Ping = () => {
         gap: 1,
       }}
     >
-      <Typography>
-        {data ? socketsLinked : <CircularProgress size={10} />} sockets linked
-        to current session
-      </Typography>
-      <Typography>
-        Current socket index: {socketIndex || <CircularProgress size={10} />}
-      </Typography>
-      <Collapse in={!!error}>
-        <Alert severity="error">
-          Error {error?.code}: {error?.message}
-          <br />
-          Try refreshing your browser
-        </Alert>
-      </Collapse>
-      <Button
-        disabled={waiting}
-        variant="contained"
-        onClick={async () => {
-          try {
-            await post("/api/ping", { socketIndex });
-            setWaiting(true);
-          } catch (e) {
-            setError(e as any);
-          }
-        }}
-      >
-        Ping
-      </Button>
-      {[...messages, ""].map((message, i) => (
-        <Collapse key={i} in={message !== ""}>
-          {message}
+      <Paper>
+        <SwipeableViews disabled animateHeight index={index}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              gap: 1,
+              p: 1
+            }}
+          >
+            <TextField
+              label="Display Name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.currentTarget.value)}
+            />
+            <Button
+              disabled={waiting}
+              onClick={async () => {
+                setWaiting(true);
+                try {
+                  await post("/api/game/player/new", { displayName });
+                  setError(null);
+                  setIndex(1);
+                } catch (e) {
+                  setError(e as Error);
+                }
+                setWaiting(false);
+              }}
+            >
+              Next
+            </Button>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "column",
+              gap: 1,
+              p: 1
+            }}
+          >
+            <Typography>Hello, {displayName}</Typography>
+          </Box>
+        </SwipeableViews>
+        <Collapse in={!!error}>
+          <Alert severity="error">
+            {error?.name}: {error?.message};
+          </Alert>
         </Collapse>
-      ))}
-      {waiting && <CircularProgress />}
+      </Paper>
     </Box>
   );
 };
 
-export default Ping;
+export default Index;
