@@ -78,7 +78,7 @@ const Index = () => {
           </Box>
         </SwipeableViews>
         <Collapse in={!!error}>
-          <Alert severity="error">
+          <Alert severity="error" sx={{m: 1}}>
             {error?.name}: {error?.message};
           </Alert>
         </Collapse>
