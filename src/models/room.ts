@@ -6,13 +6,13 @@ export interface Room {
   players: {
     _id: string;
     name: string;
-  }[]
+  }[];
 }
 
 const schema = new mongoose.Schema<Room>({
   name: String,
-  players: [{name: String}],
+  players: [{ name: String }],
 });
 
-export const Room = (mongoose.models.Player ||
+export const Room = (mongoose.models.Room ||
   mongoose.model("Room", schema)) as Model<Room>;

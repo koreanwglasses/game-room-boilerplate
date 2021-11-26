@@ -3,16 +3,17 @@ import { get } from "./fetchers";
 import { useSocket } from "./use-socket";
 
 export function useSubscription<T = any>(
-  pathname: string,
+  pathname: string | null | undefined,
   body?: Record<string, any>
 ) {
   const { mutate } = useSWRConfig();
 
   const ready = useSocket(
     (socket) => {
-      socket.on("update", ({ key }) => {
-        if (key === pathname) mutate(pathname);
-      });
+      if (pathname)
+        socket.on("update", ({ key }) => {
+          if (key === pathname) mutate(pathname);
+        });
     },
     [mutate, pathname]
   );

@@ -13,7 +13,7 @@ import SwipeableViews from "react-swipeable-views";
 import Layout from "../components/layout";
 
 const Index = () => {
-  const [displayName, setDisplayName] = useState<string>("");
+  const [playerName, setPlayerName] = useState<string>("");
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -34,9 +34,9 @@ const Index = () => {
             }}
           >
             <TextField
-              label="Display Name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.currentTarget.value)}
+              label="Player Name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.currentTarget.value)}
               size="small"
             />
             <Button
@@ -58,17 +58,33 @@ const Index = () => {
               p: 1,
             }}
           >
-            <Typography>Hello, {displayName}</Typography>
-            <Button>Create a Room</Button>
-            <Box sx={{display: "flex"}}><TextField label="Room ID" size="small" /><Button>Join</Button></Box>
-              <Button
-                disabled={waiting}
-                onClick={async () => {
-                  setIndex(0);
-                }}
-              >
-                Back
-              </Button>
+            <Typography>Hello, {playerName}</Typography>
+            <Button
+              onClick={async () => {
+                setWaiting(true);
+                try {
+                  const room = await post("/api/game/room/new", { playerName });
+                  window.location.href = `/room/${room._id}`;
+                } catch (e) {
+                  setError(e as Error);
+                  setWaiting(false);
+                }
+              }}
+            >
+              Create a Room
+            </Button>
+            <Box sx={{ display: "flex" }}>
+              <TextField label="Room ID" size="small" />
+              <Button>Join</Button>
+            </Box>
+            <Button
+              disabled={waiting}
+              onClick={async () => {
+                setIndex(0);
+              }}
+            >
+              Back
+            </Button>
           </Box>
         </SwipeableViews>
         <Collapse in={!!error}>

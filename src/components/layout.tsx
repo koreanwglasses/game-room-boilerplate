@@ -1,5 +1,5 @@
-import { Box } from "@mui/material"
-import React from "react"
+import { Box } from "@mui/material";
+import React from "react";
 
 const CenteredLayout = ({ children }: React.PropsWithChildren<{}>) => (
   <Box
@@ -16,8 +16,11 @@ const CenteredLayout = ({ children }: React.PropsWithChildren<{}>) => (
   </Box>
 );
 
-const Layout = ({children, centered}: React.PropsWithChildren<{centered:true}>) => {
-  return <CenteredLayout>{children}</CenteredLayout>
-}
+const Layout = ({
+  children,
+  centered,
+}: React.PropsWithChildren<{ centered: true }>) => {
+  return <CenteredLayout>{children}</CenteredLayout>;
+};
 
 export default Layout;
