@@ -6,7 +6,9 @@ const name = process.env.DB_NAME;
 const host = process.env.DB_HOST;
 const port = process.env.DB_PORT;
 
-const uri = `mongodb://${user}:${password}@${host}:${port}/${name}`;
+export const uri = `mongodb://${user}:${password}@${host}:${port}/${name}`;
+
+// Copied from https://github.com/vercel/next.js/blob/canary/examples/with-mongodb-mongoose/lib/dbConnect.js
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
