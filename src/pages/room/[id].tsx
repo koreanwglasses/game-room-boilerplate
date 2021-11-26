@@ -17,7 +17,9 @@ const RoomIndex = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const { data, error } = useSubscription<Room>(id && `/api/game/room/${id}`);
+  const { data, error } = useSubscription<Room>(
+    id ? `/api/game/room/${id}` : null
+  );
 
   return (
     <Layout centered>

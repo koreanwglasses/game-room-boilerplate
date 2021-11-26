@@ -3,7 +3,7 @@ import { get } from "./fetchers";
 import { useSocket, useSocketIndex } from "./use-socket";
 
 export function useSubscription<T = any>(
-  pathname: string,
+  pathname: string | null,
   query?: Record<string, any>
 ) {
   const socketIndex = useSocketIndex();
