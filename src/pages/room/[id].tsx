@@ -72,6 +72,7 @@ const RoomIndex = (props: {
   const isEditing = !props.me?.name;
   const viewIndex = isEditing ? 0 : 1;
   const host = props.room?.players.find((player) => player.isHost);
+  const canStart = (props.room?.players.length ?? 0) >= 6;
 
   const socketIndex = useSocketIndex();
 
@@ -228,6 +229,15 @@ const RoomIndex = (props: {
           />
         </Box>
       </SwipeableViews>
+      <Collapse in={!!props.me?.isHost && !!props.me.name}>
+        <Tooltip title={canStart ? "Start!" : "Not enough players"}>
+          <span>
+            <Button disabled={!canStart} variant="contained">
+              Start
+            </Button>
+          </span>
+        </Tooltip>
+      </Collapse>
       <Collapse in={!!rejection}>
         <Alert severity="error">{rejection}</Alert>
       </Collapse>
