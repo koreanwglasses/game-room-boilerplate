@@ -1,5 +1,7 @@
 import { NextApiRequest } from "next";
+import session from "next-session";
 import dbConnect from "../../../../../lib/database";
+import { getSession } from "../../../../../lib/get-session";
 import { notify } from "../../../../../lib/subscriptions";
 import { validateSocket } from "../../../../../lib/validate-socket-ids";
 import { Room, validateRoom } from "../../../../../models/room";
@@ -9,9 +11,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Get params and check for validity
+  const session = await getSession(req, res);
 
   const socketId = await validateSocket(req, res);
-  if (!socketId) return socketId;
+  if (!socketId) return;
 
   await dbConnect();
 
@@ -32,22 +35,28 @@ export default async function handler(
     const room = await Room.findByIdAndUpdate(
       id,
       {
-        $push: { players: [{ name: playerName, socketId }] },
+        $push: {
+          players: [{ name: playerName, socketId, sessionId: session.id }],
+        },
       },
       { new: true }
     )
       .lean()
       .exec();
-      
+
     notify(res, dataKey);
 
     const player = room!.players.pop()!;
 
     const io = res.socket.server.io;
     io.sockets.sockets.get(socketId)!.on("disconnect", () => {
-      Room.findByIdAndUpdate(id, {
-        $pull: { players: { _id: player._id } },
-      }).exec();
+      Room.findByIdAndUpdate(
+        id,
+        {
+          $set: { "players.$[id].lastDisconnect": new Date(Date.now()) },
+        },
+        { arrayFilters: [{ id: { _id: player._id } }] }
+      ).exec();
 
       notify(io, dataKey);
     });

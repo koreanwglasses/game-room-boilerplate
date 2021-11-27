@@ -52,15 +52,15 @@ const RoomIndex = (props: {
           try {
             const response = await post(`/api/game/room/${props.id}/join`, {
               socketIndex,
-              playerName
+              playerName,
             });
             if (response.status === "success") {
               /* rejoice */
-              console.log(response)
+              console.log(response);
             }
             if (response.status === "rejected") {
               /* sulk */
-              console.log(response)
+              console.log(response);
             }
           } catch (e) {
             props.setError(e as Error);

@@ -17,7 +17,7 @@ const Index = () => {
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(1);
 
   return (
     <Layout centered>

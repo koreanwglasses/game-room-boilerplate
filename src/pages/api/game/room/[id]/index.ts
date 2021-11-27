@@ -15,7 +15,7 @@ export default async function handler(
   }
 
   const room = await validateRoom(req, res, id as string);
-  if(!room) return;
+  if (!room) return;
 
   return res.json({ room, dataKey });
 }
