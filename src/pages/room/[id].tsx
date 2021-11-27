@@ -38,6 +38,7 @@ const RoomIndex = (props: {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 1
       }}
     >
       <Typography>Success!</Typography>
