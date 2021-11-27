@@ -3,6 +3,19 @@ import type { AppProps } from "next/app";
 import { io, Socket } from "socket.io-client";
 import { useEffect, useState, createContext } from "react";
 import { post } from "../lib/fetchers";
+import { createTheme, ThemeProvider } from "@mui/material";
+
+const theme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#0097a7",
+    },
+    secondary: {
+      main: "#e91e63",
+    },
+  },
+});
 
 export const SocketIOContext = createContext<{
   socket?: Socket;
@@ -41,7 +54,9 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return (
     <SocketIOContext.Provider value={context}>
-      <Component {...pageProps} />;
+      <ThemeProvider theme={theme}>
+        <Component {...pageProps} />
+      </ThemeProvider>
     </SocketIOContext.Provider>
   );
 }

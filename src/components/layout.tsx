@@ -10,6 +10,7 @@ const CenteredLayout = ({ children }: React.PropsWithChildren<{}>) => (
       alignItems: "center",
       justifyContent: "center",
       flexDirection: "column",
+      bgcolor: "background.default"
     }}
   >
     {children}

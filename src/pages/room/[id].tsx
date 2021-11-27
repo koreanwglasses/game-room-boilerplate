@@ -136,6 +136,7 @@ const RoomIndexLoader = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
+              gap: 1
             }}
           >
             <Typography>Loading room...</Typography>
