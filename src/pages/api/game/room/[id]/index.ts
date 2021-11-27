@@ -1,18 +1,21 @@
 import { NextApiRequest } from "next";
 import dbConnect from "../../../../../lib/database";
-import { Room } from "../../../../../models/room";
+import { subscribe } from "../../../../../lib/subscriptions";
+import { Room, validateRoom } from "../../../../../models/room";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const { id } = req.query;
+  const dataKey = `/api/game/room/${id}`;
 
-  await dbConnect();
+  if (req.query.subscribe === "true" || req.body.subscribe === "true") {
+    await subscribe(req, res, dataKey);
+  }
 
-  const room = await Room.findById(id).exec();
+  const room = await validateRoom(req, res, id as string);
+  if(!room) return;
 
-  if (!room) return res.status(400).send("Invalid room id");
-
-  return res.json(room);
+  return res.json({ room, dataKey });
 }
