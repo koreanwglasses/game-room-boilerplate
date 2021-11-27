@@ -38,5 +38,5 @@ export async function validateRoom(
   );
   await room.save();
 
-  return await Room.findById(id, "-player.socketId").exec();
+  return await Room.findById(id).select('-players.socketId').exec();
 }
