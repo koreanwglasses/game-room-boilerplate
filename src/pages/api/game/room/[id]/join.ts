@@ -38,6 +38,7 @@ export default async function handler(
     )
       .lean()
       .exec();
+      
     notify(res, dataKey);
 
     const player = room!.players.pop()!;
@@ -47,6 +48,7 @@ export default async function handler(
       Room.findByIdAndUpdate(id, {
         $pull: { players: { _id: player._id } },
       }).exec();
+
       notify(io, dataKey);
     });
   }
