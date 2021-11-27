@@ -18,6 +18,7 @@ import { useSocketIndex } from "../../lib/use-socket";
 import { useSubscription } from "../../lib/use-subscription";
 import type { Room } from "../../models/room";
 import SwipeableViews from "react-swipeable-views";
+import { InlineTextField } from "../../components/inline-text-field";
 
 const RoomIndex = (props: {
   room?: Room;
@@ -34,6 +35,8 @@ const RoomIndex = (props: {
   const isEditing = !props.me?.name;
   const viewIndex = isEditing ? 0 : 1;
 
+  const host = props.room?.players.find((player) => player.isHost);
+
   return (
     <Box
       sx={{
@@ -44,7 +47,18 @@ const RoomIndex = (props: {
         gap: 1,
       }}
     >
-      <Typography>Success!</Typography>
+      <TextField
+        variant="standard"
+        value={
+          props.room?.name || (host?.name ? `${host.name}'s Room` : "New Room")
+        }
+        sx={{
+          "& .MuiInputBase-input": {
+            fontSize: 20,
+            textAlign: "center",
+          },
+        }}
+      />
       <pre>{JSON.stringify(props.room, null, 2)}</pre>
       <SwipeableViews disabled index={viewIndex} animateHeight>
         <Box
@@ -97,13 +111,16 @@ const RoomIndex = (props: {
         <Box
           sx={{
             display: "flex",
-            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             padding: 1,
           }}
         >
-          <Typography>Welcome, {props.me?.name}.</Typography>
+          <Typography sx={{ display: "inline" }}>Welcome,</Typography>
+          <InlineTextField
+            value={playerName || props.me?.name || ""}
+            onChange={(e) => setPlayerName(e.currentTarget.value)}
+          />
         </Box>
       </SwipeableViews>
       <Collapse in={!!rejection}>
@@ -117,7 +134,9 @@ const RoomIndexLoader = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const room = useSubscription<Room>(id ? `/api/game/room/${id}` : null);
+  const room = useSubscription<{ room: Room }>(
+    id ? `/api/game/room/${id}` : null
+  );
 
   const me = useSubscription(id ? `/api/game/room/${id}/me` : null);
 
@@ -157,7 +176,7 @@ const RoomIndexLoader = () => {
           <Box>
             <RoomIndex
               id={id as string}
-              room={room.data}
+              room={room.data?.room}
               setError={setError}
               me={me.data?.me}
             />
