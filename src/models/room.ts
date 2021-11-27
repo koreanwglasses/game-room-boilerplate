@@ -58,7 +58,8 @@ export async function validateRoom(
     if (
       player.lastDisconnect &&
       +player.lastDisconnect + 1000 * 30 > Date.now() &&
-      player.sessionId === session.id
+      player.sessionId === session.id &&
+      !room!.players.find((player) => player.socketId === socketId) // Only one revive per socket
     ) {
       player.lastDisconnect = null;
       player.socketId = socketId;
