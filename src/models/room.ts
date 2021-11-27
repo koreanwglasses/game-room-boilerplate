@@ -5,23 +5,38 @@ import { getSession } from "../lib/get-session";
 import { notify } from "../lib/subscriptions";
 import { validateSocket } from "../lib/validate-socket-ids";
 
+export interface Player {
+  _id: string;
+  name: string;
+  isHost: boolean;
+
+  cards: string[];
+  numCards: number;
+
+  lastDisconnect: Date | null;
+  socketId?: string; // Private
+  sessionId?: string; // Private
+}
+
 export interface Room {
   _id: string;
   name: string;
-  players: {
-    _id: string;
-    name: string;
-
-    socketId?: string; // Private
-    sessionId?: string; // Private
-    lastDisconnect: Date | null;
-  }[];
+  players: Player[];
 }
 
 const schema = new mongoose.Schema<Room>({
   name: String,
   players: [
-    { name: String, socketId: String, sessionId: String, lastDisconnect: Date },
+    {
+      name: String,
+      isHost: Boolean,
+
+      cards: [String],
+
+      lastDisconnect: Date,
+      socketId: String,
+      sessionId: String,
+    },
   ],
 });
 
@@ -79,7 +94,7 @@ export async function validateRoom(
   if (!includePrivateFields) {
     // Filter out private props
     room = await Room.findById(id)
-      .select("-players.socketId -players.sessionId")
+      .select("-players.socketId -players.sessionId -players.cards")
       .exec();
   }
 

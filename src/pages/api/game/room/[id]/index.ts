@@ -1,7 +1,6 @@
 import { NextApiRequest } from "next";
-import dbConnect from "../../../../../lib/database";
 import { subscribe } from "../../../../../lib/subscriptions";
-import { Room, validateRoom } from "../../../../../models/room";
+import { validateRoom } from "../../../../../models/room";
 
 export default async function handler(
   req: NextApiRequest,
