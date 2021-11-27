@@ -1,15 +1,7 @@
-import { Box, TextField } from "@mui/material";
+import { Box, TextField, TextFieldProps } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 
-
-export const InlineTextField = ({
-  value, onChange,
-}: {
-  value: string;
-  onChange: (
-    e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => unknown;
-}) => {
+export const InlineTextField = (props: TextFieldProps & { value: string }) => {
   const [width, setWidth] = useState(0);
 
   const textField = useRef<HTMLDivElement>(null);
@@ -40,19 +32,19 @@ export const InlineTextField = ({
           fontSize: "inherit",
         }}
       >
-        {value}
+        {props.value}
       </Box>
       <TextField
         variant="standard"
-        value={value}
-        onChange={onChange}
         sx={{
           "& .MuiInputBase-input": {
             fontSize: "inherit",
             ml: 0.5,
           },
         }}
-        fullWidth />
+        {...props}
+        fullWidth
+      />
     </Box>
   );
 };

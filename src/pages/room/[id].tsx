@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { Error } from "mongoose";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../../components/layout";
 import { post } from "../../lib/fetchers";
 import { useSocketIndex } from "../../lib/use-socket";
@@ -27,8 +27,12 @@ const RoomIndex = (props: {
   setError: (error: Error) => void;
 }) => {
   const [waiting, setWaiting] = useState(false);
-  const [playerName, setPlayerName] = useState("");
+  const [playerName, setPlayerName] = useState(props.me?.name ?? "");
   const [rejection, setRejection] = useState<string>();
+
+  useEffect(() => {
+    if (!playerName && props.me?.name) setPlayerName(props.me?.name);
+  }, [playerName, props.me?.name]);
 
   const socketIndex = useSocketIndex();
 
@@ -118,8 +122,23 @@ const RoomIndex = (props: {
         >
           <Typography sx={{ display: "inline" }}>Welcome,</Typography>
           <InlineTextField
-            value={playerName || props.me?.name || ""}
+            value={playerName}
+            disabled={waiting}
             onChange={(e) => setPlayerName(e.currentTarget.value)}
+            inputProps={{
+              async onBlur() {
+                setWaiting(true);
+                try {
+                  await post(`/api/game/room/${props.id}/me`, {
+                    socketIndex,
+                    me: { name: playerName },
+                  });
+                } catch (e) {
+                  props.setError(e as Error);
+                }
+                setWaiting(false);
+              },
+            }}
           />
         </Box>
       </SwipeableViews>
