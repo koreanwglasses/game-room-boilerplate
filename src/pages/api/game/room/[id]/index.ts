@@ -9,7 +9,7 @@ export default async function handler(
   const { id } = req.query;
   const dataKey = `/api/game/room/${id}`;
 
-  if (req.query.subscribe === "true" || req.body.subscribe === "true") {
+  if (req.query.subscribe === "true") {
     await subscribe(req, res, dataKey);
   }
 

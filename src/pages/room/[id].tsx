@@ -31,7 +31,8 @@ const RoomIndex = (props: {
 
   const socketIndex = useSocketIndex();
 
-  const viewIndex = props.me?.name ? 1 : 0;
+  const isEditing = !props.me?.name;
+  const viewIndex = isEditing ? 0 : 1;
 
   return (
     <Box
@@ -68,10 +69,19 @@ const RoomIndex = (props: {
             onClick={async () => {
               setWaiting(true);
               try {
-                const response = await post(`/api/game/room/${props.id}/join`, {
-                  socketIndex,
-                  playerName,
-                });
+                // Update details if player is already in room.
+                // Otherwise, join
+                const route = props.me ? "me" : "join";
+
+                const response = await post(
+                  `/api/game/room/${props.id}/${route}`,
+                  props.me
+                    ? { socketIndex, me: { name: playerName } }
+                    : {
+                        socketIndex,
+                        playerName,
+                      }
+                );
                 if (response.status === "rejected") {
                   setRejection(response.reason);
                 }
@@ -81,7 +91,7 @@ const RoomIndex = (props: {
               setWaiting(false);
             }}
           >
-            Join
+            {props.me ? "Save" : "Join"}
           </Button>
         </Box>
         <Box
@@ -136,7 +146,7 @@ const RoomIndexLoader = () => {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
-              gap: 1
+              gap: 1,
             }}
           >
             <Typography>Loading room...</Typography>

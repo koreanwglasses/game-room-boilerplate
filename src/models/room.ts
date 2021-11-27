@@ -123,3 +123,80 @@ export async function validateMe(
   }
   return me;
 }
+
+export async function updateMe(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  id: string,
+  me: Player
+) {
+  await dbConnect();
+
+  const socketId = await validateSocket(req, res);
+  if (!socketId) return;
+
+  console.log(socketId)
+  await Room.findByIdAndUpdate(
+    id,
+    {
+      $set: { "players.$[me].name": me.name },
+    },
+    { arrayFilters: [{ 'me.socketId': socketId }] }
+  ).exec();
+
+  const dataKey = `/api/game/room/${id}`;
+  const meDataKey = `/api/game/room/${id}/me#${socketId}`;
+  notify(res, dataKey);
+  notify(res, meDataKey);
+
+  return true;
+}
+
+export async function joinRoom(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  id: string,
+  { playerName, isHost }: { playerName?: string; isHost?: boolean }
+) {
+  await dbConnect();
+
+  const session = await getSession(req, res);
+  const socketId = await validateSocket(req, res);
+  if (!socketId) return;
+
+  const dataKey = `/api/game/room/${id}`;
+  const room = await Room.findByIdAndUpdate(
+    id,
+    {
+      $push: {
+        players: [
+          { name: playerName, isHost, socketId, sessionId: session.id },
+        ],
+      },
+    },
+    { new: true }
+  )
+    .lean()
+    .exec();
+
+  const meDataKey = `/api/game/room/${id}/me#${socketId}`;
+  notify(res, dataKey);
+  notify(res, meDataKey);
+
+  const player = room!.players.pop()!;
+
+  const io = res.socket.server.io;
+  io.sockets.sockets.get(socketId)!.on("disconnect", () => {
+    Room.findByIdAndUpdate(
+      id,
+      {
+        $set: { "players.$[id].lastDisconnect": new Date(Date.now()) },
+      },
+      { arrayFilters: [{ id: { _id: player._id } }] }
+    ).exec();
+
+    notify(io, dataKey);
+  });
+
+  return true;
+}

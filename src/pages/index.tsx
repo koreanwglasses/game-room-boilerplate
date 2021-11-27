@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Alert, Box, Button, Collapse, Paper, TextField } from "@mui/material";
 import { post } from "../lib/fetchers";
 import Layout from "../components/layout";
+import { useSocketIndex } from "../lib/use-socket";
 
 const Index = () => {
   const [waiting, setWaiting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const socketIndex = useSocketIndex();
 
   return (
     <Layout centered>
@@ -25,7 +27,7 @@ const Index = () => {
             onClick={async () => {
               setWaiting(true);
               try {
-                const room = await post("/api/game/room/new");
+                const room = await post("/api/game/room/new", { socketIndex });
                 window.location.href = `/room/${room._id}`;
               } catch (e) {
                 setError(e as Error);
