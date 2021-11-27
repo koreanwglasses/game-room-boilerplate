@@ -10,15 +10,14 @@ import {
   TextField,
 } from "@mui/material";
 import { Error } from "mongoose";
-import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import Layout from "../../components/layout";
-import { get, post } from "../../lib/fetchers";
+import { post } from "../../lib/fetchers";
 import { useSocketIndex } from "../../lib/use-socket";
 import { useSubscription } from "../../lib/use-subscription";
 import type { Room } from "../../models/room";
-import { useAsync } from "react-use";
+import SwipeableViews from "react-swipeable-views";
 
 const RoomIndex = (props: {
   room?: Room;
@@ -28,8 +27,11 @@ const RoomIndex = (props: {
 }) => {
   const [waiting, setWaiting] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [rejection, setRejection] = useState<string>();
 
   const socketIndex = useSocketIndex();
+
+  const viewIndex = props.me?.name ? 1 : 0;
 
   return (
     <Box
@@ -38,22 +40,31 @@ const RoomIndex = (props: {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 1
+        gap: 1,
       }}
     >
       <Typography>Success!</Typography>
       <pre>{JSON.stringify(props.room, null, 2)}</pre>
-      {props.me?.name && <Typography>Welcome, {props.me.name}.</Typography>}
-      {!props.me?.name && (
-        <>
+      <SwipeableViews disabled index={viewIndex} animateHeight>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+            padding: 1,
+          }}
+        >
           <TextField
+            disabled={waiting || !!rejection}
             label="Your Name"
             size="small"
             value={playerName}
             onChange={(e) => setPlayerName(e.currentTarget.value)}
           />
           <Button
-            disabled={waiting || !socketIndex}
+            disabled={waiting || !socketIndex || !!rejection}
             onClick={async () => {
               setWaiting(true);
               try {
@@ -61,13 +72,8 @@ const RoomIndex = (props: {
                   socketIndex,
                   playerName,
                 });
-                if (response.status === "success") {
-                  /* rejoice */
-                  console.log(response);
-                }
                 if (response.status === "rejected") {
-                  /* sulk */
-                  console.log(response);
+                  setRejection(response.reason);
                 }
               } catch (e) {
                 props.setError(e as Error);
@@ -77,8 +83,22 @@ const RoomIndex = (props: {
           >
             Join
           </Button>
-        </>
-      )}
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 1,
+          }}
+        >
+          <Typography>Welcome, {props.me?.name}.</Typography>
+        </Box>
+      </SwipeableViews>
+      <Collapse in={!!rejection}>
+        <Alert severity="error">{rejection}</Alert>
+      </Collapse>
     </Box>
   );
 };
