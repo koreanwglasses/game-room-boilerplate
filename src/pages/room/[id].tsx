@@ -16,30 +16,40 @@ import Layout from "../../components/layout";
 import { post } from "../../lib/fetchers";
 import { useSocketIndex } from "../../lib/use-socket";
 import { useSubscription } from "../../lib/use-subscription";
-import type { Room } from "../../models/room";
+import type { Player, Room } from "../../models/room";
 import SwipeableViews from "react-swipeable-views";
 import { InlineTextField } from "../../components/inline-text-field";
 
 const RoomIndex = (props: {
   room?: Room;
   id: string;
-  me?: { name: string };
+  me?: Player;
   setError: (error: Error) => void;
 }) => {
-  const [waiting, setWaiting] = useState(false);
-  const [playerName, setPlayerName] = useState(props.me?.name ?? "");
-  const [rejection, setRejection] = useState<string>();
-
-  useEffect(() => {
-    if (!playerName && props.me?.name) setPlayerName(props.me?.name);
-  }, [playerName, props.me?.name]);
+  const isEditing = !props.me?.name;
+  const viewIndex = isEditing ? 0 : 1;
+  const host = props.room?.players.find((player) => player.isHost);
 
   const socketIndex = useSocketIndex();
 
-  const isEditing = !props.me?.name;
-  const viewIndex = isEditing ? 0 : 1;
+  const [waiting, setWaiting] = useState(false);
+  const [rejection, setRejection] = useState<string>();
 
-  const host = props.room?.players.find((player) => player.isHost);
+  const [hasEditedPlayerName, setHasEditedPlayerName] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [hasEditedRoomName, setHasEditedRoomName] = useState(false);
+  const [roomName, setRoomName] = useState("");
+
+  useEffect(() => {
+    if (!hasEditedPlayerName) setPlayerName(props.me?.name ?? "");
+  }, [hasEditedPlayerName, props.me?.name]);
+
+  useEffect(() => {
+    if (!hasEditedRoomName)
+      setRoomName(
+        props.room?.name ?? (host?.name ? `${host.name}'s Room` : "New Room")
+      );
+  }, [hasEditedRoomName, host?.name, props.room?.name]);
 
   return (
     <Box
@@ -53,9 +63,31 @@ const RoomIndex = (props: {
     >
       <TextField
         variant="standard"
-        value={
-          props.room?.name || (host?.name ? `${host.name}'s Room` : "New Room")
-        }
+        disabled={waiting || !props.me?.isHost}
+        value={roomName}
+        onChange={(e) => {
+          setRoomName(e.currentTarget.value);
+          setHasEditedRoomName(true);
+        }}
+        inputProps={{
+          async onBlur() {
+            setWaiting(true);
+            try {
+              await post(`/api/game/room/${props.id}`, {
+                socketIndex,
+                room: { name: roomName },
+              });
+            } catch (e) {
+              props.setError(e as Error);
+            }
+            setWaiting(false);
+          },
+          onKeyUp(e) {
+            if (e.key.toLowerCase() === "enter") {
+              e.currentTarget.blur();
+            }
+          },
+        }}
         sx={{
           "& .MuiInputBase-input": {
             fontSize: 20,
@@ -80,7 +112,10 @@ const RoomIndex = (props: {
             label="Your Name"
             size="small"
             value={playerName}
-            onChange={(e) => setPlayerName(e.currentTarget.value)}
+            onChange={(e) => {
+              setPlayerName(e.currentTarget.value);
+              setHasEditedPlayerName(true);
+            }}
           />
           <Button
             disabled={waiting || !socketIndex || !!rejection}
@@ -124,7 +159,10 @@ const RoomIndex = (props: {
           <InlineTextField
             value={playerName}
             disabled={waiting}
-            onChange={(e) => setPlayerName(e.currentTarget.value)}
+            onChange={(e) => {
+              setPlayerName(e.currentTarget.value);
+              setHasEditedPlayerName(true);
+            }}
             inputProps={{
               async onBlur() {
                 setWaiting(true);
@@ -137,6 +175,11 @@ const RoomIndex = (props: {
                   props.setError(e as Error);
                 }
                 setWaiting(false);
+              },
+              onKeyUp(e) {
+                if (e.key.toLowerCase() === "enter") {
+                  e.currentTarget.blur();
+                }
               },
             }}
           />
@@ -157,7 +200,9 @@ const RoomIndexLoader = () => {
     id ? `/api/game/room/${id}` : null
   );
 
-  const me = useSubscription(id ? `/api/game/room/${id}/me` : null);
+  const me = useSubscription<{ me: Player }>(
+    id ? `/api/game/room/${id}/me` : null
+  );
 
   const [error, setError] = useState<Error | null>(null);
 

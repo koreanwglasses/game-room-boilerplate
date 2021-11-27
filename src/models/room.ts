@@ -105,49 +105,20 @@ export async function validateRoom(
   return room;
 }
 
-export async function validateMe(
-  req: NextApiRequest,
-  res: NextApiResponse,
-  id: string
-) {
-  const socketId = await validateSocket(req, res);
-  if (!socketId) return;
-
-  const room = await validateRoom(req, res, id, true);
-  if (!room) return;
-
-  const me = room.players.find((player) => player.socketId === socketId);
-  if (me) {
-    delete me["socketId"];
-    delete me["sessionId"];
-  }
-  return me;
-}
-
-export async function updateMe(
+export async function updateRoom(
   req: NextApiRequest,
   res: NextApiResponse,
   id: string,
-  me: Player
+  room: { name: string }
 ) {
   await dbConnect();
 
-  const socketId = await validateSocket(req, res);
-  if (!socketId) return;
-
-  console.log(socketId)
-  await Room.findByIdAndUpdate(
-    id,
-    {
-      $set: { "players.$[me].name": me.name },
-    },
-    { arrayFilters: [{ 'me.socketId': socketId }] }
-  ).exec();
+  await Room.findByIdAndUpdate(id, {
+    $set: { name: room.name },
+  }).exec();
 
   const dataKey = `/api/game/room/${id}`;
-  const meDataKey = `/api/game/room/${id}/me#${socketId}`;
   notify(res, dataKey);
-  notify(res, meDataKey);
 
   return true;
 }
@@ -197,6 +168,52 @@ export async function joinRoom(
 
     notify(io, dataKey);
   });
+
+  return true;
+}
+
+export async function validateMe(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  id: string
+) {
+  const socketId = await validateSocket(req, res);
+  if (!socketId) return;
+
+  const room = await validateRoom(req, res, id, true);
+  if (!room) return;
+
+  const me = room.players.find((player) => player.socketId === socketId);
+  if (me) {
+    delete me["socketId"];
+    delete me["sessionId"];
+  }
+  return me;
+}
+
+export async function updateMe(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  id: string,
+  me: Player
+) {
+  await dbConnect();
+
+  const socketId = await validateSocket(req, res);
+  if (!socketId) return;
+
+  await Room.findByIdAndUpdate(
+    id,
+    {
+      $set: { "players.$[me].name": me.name },
+    },
+    { arrayFilters: [{ "me.socketId": socketId }] }
+  ).exec();
+
+  const dataKey = `/api/game/room/${id}`;
+  const meDataKey = `/api/game/room/${id}/me#${socketId}`;
+  notify(res, dataKey);
+  notify(res, meDataKey);
 
   return true;
 }
