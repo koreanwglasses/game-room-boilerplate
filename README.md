@@ -3,9 +3,9 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 Use this as a template with:
 
 ```bash
-npx create-next-app -e https://github.com/koreanwglasses/next-with-sockets
+npx create-next-app -e https://github.com/koreanwglasses/game-room-boilerplate
 # or
-yarn create next-app -e https://github.com/koreanwglasses/next-with-sockets
+yarn create next-app -e https://github.com/koreanwglasses/game-room-boilerplate
 ```
 
 ## Getting Started
