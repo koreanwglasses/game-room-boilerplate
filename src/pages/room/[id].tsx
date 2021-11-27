@@ -8,6 +8,9 @@ import {
   Box,
   Button,
   TextField,
+  List,
+  ListItem,
+  Tooltip,
 } from "@mui/material";
 import { Error } from "mongoose";
 import { useRouter } from "next/router";
@@ -19,6 +22,46 @@ import { useSubscription } from "../../lib/use-subscription";
 import type { Player, Room } from "../../models/room";
 import SwipeableViews from "react-swipeable-views";
 import { InlineTextField } from "../../components/inline-text-field";
+import { Star } from "@mui/icons-material";
+
+const RoomIndexStatic = ({ room }: { room: Room }) => {
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 1,
+      }}
+    >
+      <Typography variant="overline">
+        {room.players.length}/6 players
+      </Typography>
+      <List>
+        {room.players.map((player) => (
+          <ListItem
+            key={player._id}
+            sx={{ justifyContent: "center" }}
+            style={{ opacity: player.lastDisconnect ? 0.5 : 1 }}
+          >
+            {player.isHost && (
+              <Tooltip title="Host" arrow>
+                <Star />
+              </Tooltip>
+            )}
+            {player.lastDisconnect && (
+              <Tooltip title="Lost connection" arrow>
+                <CircularProgress size={18} sx={{ mx: 1, color: "white" }} />
+              </Tooltip>
+            )}
+            {player.name || (player.isHost && "Host")}
+          </ListItem>
+        ))}
+      </List>
+    </Box>
+  );
+};
 
 const RoomIndex = (props: {
   room?: Room;
@@ -95,7 +138,7 @@ const RoomIndex = (props: {
           },
         }}
       />
-      <pre>{JSON.stringify(props.room, null, 2)}</pre>
+      {props.room && <RoomIndexStatic room={props.room} />}
       <SwipeableViews disabled index={viewIndex} animateHeight>
         <Box
           sx={{

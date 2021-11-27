@@ -1,5 +1,6 @@
 import mongoose, { Model } from "mongoose";
 import { NextApiRequest } from "next";
+import { Server } from "socket.io";
 import dbConnect from "../lib/database";
 import { getSession } from "../lib/get-session";
 import { notify } from "../lib/subscriptions";
@@ -43,6 +44,28 @@ const schema = new mongoose.Schema<Room>({
 export const Room = (mongoose.models.Room ||
   mongoose.model("Room", schema)) as Model<Room>;
 
+function handleDisconnect(
+  io: Server,
+  {
+    roomId,
+    socketId,
+    playerId,
+  }: { roomId: string; socketId: string; playerId: string }
+) {
+  const dataKey = `/api/game/room/${roomId}`;
+  io.sockets.sockets.get(socketId)!.on("disconnect", async () => {
+    await Room.findByIdAndUpdate(
+      roomId,
+      {
+        $set: { "players.$[id].lastDisconnect": new Date(Date.now()) },
+      },
+      { arrayFilters: [{ id: { _id: playerId } }] }
+    ).exec();
+
+    notify(io, dataKey);
+  });
+}
+
 export async function validateRoom(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -79,6 +102,7 @@ export async function validateRoom(
     ) {
       player.lastDisconnect = null;
       player.socketId = socketId;
+      handleDisconnect(io, { roomId: id, socketId, playerId: player._id });
       changed = true;
     }
   });
@@ -135,7 +159,6 @@ export async function joinRoom(
   const socketId = await validateSocket(req, res);
   if (!socketId) return;
 
-  const dataKey = `/api/game/room/${id}`;
   const room = await Room.findByIdAndUpdate(
     id,
     {
@@ -150,6 +173,7 @@ export async function joinRoom(
     .lean()
     .exec();
 
+  const dataKey = `/api/game/room/${id}`;
   const meDataKey = `/api/game/room/${id}/me#${socketId}`;
   notify(res, dataKey);
   notify(res, meDataKey);
@@ -157,17 +181,7 @@ export async function joinRoom(
   const player = room!.players.pop()!;
 
   const io = res.socket.server.io;
-  io.sockets.sockets.get(socketId)!.on("disconnect", () => {
-    Room.findByIdAndUpdate(
-      id,
-      {
-        $set: { "players.$[id].lastDisconnect": new Date(Date.now()) },
-      },
-      { arrayFilters: [{ id: { _id: player._id } }] }
-    ).exec();
-
-    notify(io, dataKey);
-  });
+  handleDisconnect(io, { roomId: id, socketId, playerId: player._id });
 
   return true;
 }
