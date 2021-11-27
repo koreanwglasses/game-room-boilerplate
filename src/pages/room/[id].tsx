@@ -22,9 +22,12 @@ import { useSubscription } from "../../lib/use-subscription";
 import type { Player, Room } from "../../models/room";
 import SwipeableViews from "react-swipeable-views";
 import { InlineTextField } from "../../components/inline-text-field";
-import { Star } from "@mui/icons-material";
+import { ContentCopy, Star } from "@mui/icons-material";
+import copy from "copy-to-clipboard";
+import { useSnackbar } from "notistack";
 
 const RoomIndexStatic = ({ room }: { room: Room }) => {
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   return (
     <Box
       sx={{
@@ -35,6 +38,18 @@ const RoomIndexStatic = ({ room }: { room: Room }) => {
         gap: 1,
       }}
     >
+      <Button
+        size="small"
+        onClick={() => {
+          if (copy(window.location.href)) {
+            enqueueSnackbar("Copied to clipboard!", { variant: "success" });
+            setTimeout(() => closeSnackbar(), 2000);
+          }
+        }}
+      >
+        <ContentCopy fontSize="small" sx={{mr: 0.5}}/>
+        Copy Invite Link
+      </Button>
       <Typography variant="overline">
         {room.players.length}/6 players
       </Typography>

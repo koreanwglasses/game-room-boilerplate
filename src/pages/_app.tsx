@@ -4,6 +4,7 @@ import { io, Socket } from "socket.io-client";
 import { useEffect, useState, createContext } from "react";
 import { post } from "../lib/fetchers";
 import { createTheme, ThemeProvider } from "@mui/material";
+import { SnackbarProvider } from 'notistack';
 
 const theme = createTheme({
   palette: {
@@ -55,7 +56,9 @@ function MyApp({ Component, pageProps }: AppProps) {
   return (
     <SocketIOContext.Provider value={context}>
       <ThemeProvider theme={theme}>
+        <SnackbarProvider maxSnack={3}>
         <Component {...pageProps} />
+        </SnackbarProvider>
       </ThemeProvider>
     </SocketIOContext.Provider>
   );
