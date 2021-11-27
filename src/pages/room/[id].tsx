@@ -10,17 +10,20 @@ import {
   TextField,
 } from "@mui/material";
 import { Error } from "mongoose";
+import { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import Layout from "../../components/layout";
-import { post } from "../../lib/fetchers";
+import { get, post } from "../../lib/fetchers";
 import { useSocketIndex } from "../../lib/use-socket";
 import { useSubscription } from "../../lib/use-subscription";
 import type { Room } from "../../models/room";
+import { useAsync } from "react-use";
 
 const RoomIndex = (props: {
-  data?: Room;
+  room?: Room;
   id: string;
+  me?: { name: string };
   setError: (error: Error) => void;
 }) => {
   const [waiting, setWaiting] = useState(false);
@@ -38,38 +41,43 @@ const RoomIndex = (props: {
       }}
     >
       <Typography>Success!</Typography>
-      <pre>{JSON.stringify(props.data, null, 2)}</pre>
-      <TextField
-        label="Your Name"
-        size="small"
-        value={playerName}
-        onChange={(e) => setPlayerName(e.currentTarget.value)}
-      />
-      <Button
-        disabled={waiting || !socketIndex}
-        onClick={async () => {
-          setWaiting(true);
-          try {
-            const response = await post(`/api/game/room/${props.id}/join`, {
-              socketIndex,
-              playerName,
-            });
-            if (response.status === "success") {
-              /* rejoice */
-              console.log(response);
-            }
-            if (response.status === "rejected") {
-              /* sulk */
-              console.log(response);
-            }
-          } catch (e) {
-            props.setError(e as Error);
-          }
-          setWaiting(false);
-        }}
-      >
-        Join
-      </Button>
+      <pre>{JSON.stringify(props.room, null, 2)}</pre>
+      {props.me?.name && <Typography>Welcome, {props.me.name}.</Typography>}
+      {!props.me?.name && (
+        <>
+          <TextField
+            label="Your Name"
+            size="small"
+            value={playerName}
+            onChange={(e) => setPlayerName(e.currentTarget.value)}
+          />
+          <Button
+            disabled={waiting || !socketIndex}
+            onClick={async () => {
+              setWaiting(true);
+              try {
+                const response = await post(`/api/game/room/${props.id}/join`, {
+                  socketIndex,
+                  playerName,
+                });
+                if (response.status === "success") {
+                  /* rejoice */
+                  console.log(response);
+                }
+                if (response.status === "rejected") {
+                  /* sulk */
+                  console.log(response);
+                }
+              } catch (e) {
+                props.setError(e as Error);
+              }
+              setWaiting(false);
+            }}
+          >
+            Join
+          </Button>
+        </>
+      )}
     </Box>
   );
 };
@@ -78,9 +86,9 @@ const RoomIndexLoader = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  const { data, error: loadingError } = useSubscription<Room>(
-    id ? `/api/game/room/${id}` : null
-  );
+  const room = useSubscription<Room>(id ? `/api/game/room/${id}` : null);
+
+  const me = useSubscription(id ? `/api/game/room/${id}/me` : null);
 
   const [error, setError] = useState<Error | null>(null);
 
@@ -97,7 +105,7 @@ const RoomIndexLoader = () => {
           minWidth: 300,
         }}
       >
-        <Fade in={!data && !loadingError} unmountOnExit appear={false}>
+        <Fade in={!room.data && !room.error} unmountOnExit appear={false}>
           <Box
             sx={{
               position: "absolute",
@@ -113,14 +121,19 @@ const RoomIndexLoader = () => {
             <CircularProgress />
           </Box>
         </Fade>
-        <Fade in={!!data}>
+        <Fade in={!!room.data && !!me.data}>
           <Box>
-            <RoomIndex id={id as string} data={data} setError={setError} />
+            <RoomIndex
+              id={id as string}
+              room={room.data}
+              setError={setError}
+              me={me.data?.me}
+            />
           </Box>
         </Fade>
-        <Collapse in={!!loadingError || !!error}>
+        <Collapse in={!!(error || room.error)}>
           <Alert severity="error">
-            {(loadingError ?? error)?.name}: {(loadingError ?? error)?.message}
+            {(error ?? room.error)?.name}: {(error ?? room.error)?.message}
           </Alert>
         </Collapse>
       </Paper>

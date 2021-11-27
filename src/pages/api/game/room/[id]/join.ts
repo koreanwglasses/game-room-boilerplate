@@ -44,7 +44,9 @@ export default async function handler(
       .lean()
       .exec();
 
+    const meDataKey = `/api/game/room/${id}/me#${socketId}`;
     notify(res, dataKey);
+    notify(res, meDataKey);
 
     const player = room!.players.pop()!;
 

@@ -12,8 +12,8 @@ export interface Room {
     _id: string;
     name: string;
 
-    socketId: string; // Private
-    sessionId: string; // Private
+    socketId?: string; // Private
+    sessionId?: string; // Private
     lastDisconnect: Date | null;
   }[];
 }
@@ -31,7 +31,8 @@ export const Room = (mongoose.models.Room ||
 export async function validateRoom(
   req: NextApiRequest,
   res: NextApiResponse,
-  id: string
+  id: string,
+  includePrivateFields = false
 ) {
   await dbConnect();
 
@@ -49,7 +50,7 @@ export async function validateRoom(
     // Timeout disconnected players
     if (
       !player.lastDisconnect &&
-      !io.sockets.sockets.get(player.socketId)?.connected
+      !io.sockets.sockets.get(player.socketId!)?.connected
     ) {
       player.lastDisconnect = new Date(Date.now());
       changed = true;
@@ -72,16 +73,38 @@ export async function validateRoom(
     (player) =>
       !player.lastDisconnect || +player.lastDisconnect + 1000 * 30 > Date.now()
   );
+
   await room.save();
 
-  // Filter out private props
-  room = await Room.findById(id)
-    .select("-players.socketId -players.sessionId")
-    .exec();
+  if (!includePrivateFields) {
+    // Filter out private props
+    room = await Room.findById(id)
+      .select("-players.socketId -players.sessionId")
+      .exec();
+  }
 
   // Notify subscribers if changes were made
   const dataKey = `/api/game/room/${id}`;
   if (changed) notify(io, dataKey);
 
   return room;
+}
+
+export async function validateMe(
+  req: NextApiRequest,
+  res: NextApiResponse,
+  id: string
+) {
+  const socketId = await validateSocket(req, res);
+  if (!socketId) return;
+
+  const room = await validateRoom(req, res, id, true);
+  if (!room) return;
+
+  const me = room.players.find((player) => player.socketId === socketId);
+  if (me) {
+    delete me["socketId"];
+    delete me["sessionId"];
+  }
+  return me;
 }
